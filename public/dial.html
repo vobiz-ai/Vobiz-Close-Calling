@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Call with Vobiz</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/satoshi" />
+    <link rel="stylesheet" href="/static/phone.css" />
+  </head>
+  <body>
+    <!-- Opened by the browser for a tel: link (navigator.registerProtocolHandler),
+         or by a Close Integration Link.
+         It only passes the number to an open softphone tab, which asks the
+         agent before dialling. -->
+    <div class="main">
+      <section class="step">
+        <div class="step-head">
+          <h2 class="step-title">Call with Vobiz</h2>
+        </div>
+        <p id="dial-number" class="contact-name">—</p>
+        <p id="dial-status" class="step-help">Sending the number to your softphone…</p>
+        <div class="actions">
+          <a id="dial-open" class="btn btn-primary" href="/phone" target="vobiz-softphone" hidden>Open the softphone</a>
+          <button id="dial-close" class="btn btn-secondary" type="button">Close this tab</button>
+        </div>
+      </section>
+    </div>
+    <script src="/static/dial.js"></script>
+  </body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vobiz Calling for Close</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <!-- Satoshi, as in the Zendesk and ClickUp panels. -->
+    <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/satoshi" />
+    <link rel="stylesheet" href="/static/phone.css" />
+  </head>
+  <body>
+    <!-- Call finished popup (ClickUp pattern). -->
+    <div id="call-done" class="call-done-backdrop" hidden>
+      <div class="call-done-card" role="dialog" aria-modal="true" aria-labelledby="call-done-title">
+        <div class="call-done-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+            <polyline points="16 2 20 6 12 14"/>
+          </svg>
+        </div>
+        <span class="call-done-badge" id="call-done-badge">Inbound call completed</span>
+        <h3 class="call-done-title" id="call-done-title">Call finished</h3>
+        <p class="call-done-caller" id="call-done-caller">—</p>
+        <div class="call-done-stats">
+          <div class="call-done-stat">
+            <span class="call-done-stat-label">Talk time</span>
+            <span class="call-done-stat-val" id="call-done-duration">00:00</span>
+          </div>
+          <div class="call-done-stat">
+            <span class="call-done-stat-label">Finished at</span>
+            <span class="call-done-stat-val" id="call-done-time">--:--</span>
+          </div>
+        </div>
+        <p class="call-done-crm" id="call-done-crm" data-state="pending">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          <span id="call-done-crm-text">Logging to Close…</span>
+        </p>
+        <a class="call-done-link" id="call-done-link" target="_blank" rel="noopener" hidden>Open the lead in Close &rarr;</a>
+        <button id="call-done-dismiss" class="btn btn-primary" type="button">Dismiss</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <header class="app-header">
+        <div class="brand">
+          <!-- The Vobiz logomark, from vobiz.ai/logo.svg. -->
+          <svg class="brand-mark" width="28" height="20" viewBox="0 0 42 30" fill="none" aria-hidden="true" focusable="false">
+            <path d="M42 14.7458V0C24.5641 0 12 13.7288 12 30H27.1282C27.1282 21.3559 33.5385 14.7458 42 14.7458Z" fill="#E83C00"/>
+            <path d="M0 15V0C9.28572 0 15 6.42857 15 15H0Z" fill="#E86A00"/>
+          </svg>
+          <div class="brand-text">
+            <span class="brand-name">vobiz</span>
+            <span class="brand-product">Calling for Close</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span id="status" class="status-badge is-pending">Offline</span>
+          <button id="btn-theme" class="icon-btn" type="button" title="Switch light or dark" aria-label="Switch light or dark theme">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          </button>
+          <button id="btn-settings" class="icon-btn" type="button" title="Settings" aria-label="Settings" hidden>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- The full status sentence. Too long for the header badge, so it lives
+           here where there is room to wrap and be read. -->
+      <p id="status-message" class="status-message is-pending" role="status" hidden></p>
+
+      <!-- Incoming call banner. Above the steps, so it is the first thing seen. -->
+      <div id="incoming" class="incoming" hidden>
+        <p class="incoming-label">Incoming call</p>
+        <p id="in-name" class="incoming-from">—</p>
+        <p id="in-number" class="incoming-number"></p>
+        <ul id="in-convs" class="conv-list"></ul>
+        <div class="incoming-actions">
+          <button id="btn-answer" class="btn btn-accept" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            Accept
+          </button>
+          <button id="btn-decline" class="btn btn-hangup" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67"/>
+              <path d="M5 5l14 14"/>
+            </svg>
+            Decline
+          </button>
+        </div>
+        <p class="incoming-hint">Enter to accept, Escape to decline</p>
+      </div>
+
+      <!-- Click-to-call from Close: always confirmed. -->
+      <div id="confirm" class="confirm-banner" hidden>
+        <p class="confirm-label">Call from Close</p>
+        <p id="confirm-text" class="confirm-text"></p>
+        <!-- A link that names a Close contact or lead, not a number: pick one of its numbers. -->
+        <select id="sel-confirm-number" class="input" aria-label="Number to call" hidden></select>
+        <div class="actions">
+          <button id="btn-confirm-call" class="btn btn-primary" type="button">Call</button>
+          <button id="btn-confirm-dismiss" class="btn btn-secondary" type="button">Dismiss</button>
+        </div>
+      </div>
+
+      <!-- ═══ Phone ═══════════════════════════════════════════════════════════ -->
+      <div class="panel" id="view-phone">
+        <!-- Step 1: connect Close -->
+        <section class="step" id="step-hs">
+          <div class="step-head">
+            <span class="step-num">1</span>
+            <h2 class="step-title">Connect Close</h2>
+          </div>
+          <div id="hs-out">
+            <p class="step-help">
+              Calls are logged in Close under your name, on the caller's lead,
+              and callers are looked up by number before you answer.
+            </p>
+            <!-- A link, not a form: CSP form-action would also cover the
+                 redirect on to Close's authorize page and block it. -->
+            <a id="btn-connect" class="btn btn-primary" href="/close/oauth/start" hidden>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Connect Close
+            </a>
+            <p id="apikey-or" class="hint" hidden>Or connect with your own Close API key:</p>
+            <!-- The agent's own key: Close attributes what it writes to the key's owner. -->
+            <form id="form-apikey" autocomplete="off" hidden>
+              <p class="step-help" id="apikey-help">
+                Create one in Close under <strong>Settings &rarr; Developer &rarr; API Keys</strong>.
+                Use a key of your own: calls are logged as whoever owns the key.
+              </p>
+              <div class="form-group">
+                <label class="field-label" for="in-apikey">Close API key</label>
+                <input type="password" id="in-apikey" class="input input-mono" placeholder="api_XXXXXXXXXXXXXXXX" required spellcheck="false" />
+              </div>
+              <button id="btn-apikey" class="btn btn-secondary" type="submit">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Connect with API key
+              </button>
+            </form>
+          </div>
+          <p id="hs-who" class="hint" hidden></p>
+        </section>
+
+        <!-- Step 2: sign in to Vobiz -->
+        <section class="step" id="step-signin">
+          <div class="step-head">
+            <span class="step-num">2</span>
+            <h2 class="step-title">Sign in to Vobiz</h2>
+          </div>
+          <div id="signin-forms">
+
+            <!-- Any Vobiz account. The backend checks the pair with Vobiz and sets
+                 up this agent's own SIP endpoint inside that account. -->
+            <div id="mode-account">
+              <p class="step-help">
+                Your Auth ID and Auth Token are on the
+                <a href="https://console.vobiz.ai" target="_blank" rel="noopener">Console dashboard</a>,
+                under <strong>API credentials</strong>. The Auth Token is not your login password.
+              </p>
+              <form id="form-account" autocomplete="off">
+                <div class="form-group">
+                  <label class="field-label" for="in-authid">Auth ID</label>
+                  <input type="text" id="in-authid" class="input input-mono" placeholder="MA_XXXXXXXX" required spellcheck="false" />
+                </div>
+                <div class="form-group">
+                  <label class="field-label" for="in-authtoken">Auth Token</label>
+                  <input type="password" id="in-authtoken" class="input" placeholder="Your Vobiz Auth Token" required />
+                </div>
+                <button id="btn-login" class="btn btn-primary" type="submit">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                    <path d="m10 17 5-5-5-5M15 12H3"/>
+                  </svg>
+                  Log in
+                </button>
+              </form>
+            </div>
+          </div>
+          <div class="signed-row">
+            <p id="login-status" class="hint">Not signed in.</p>
+            <button id="btn-signout" class="link-btn" type="button" hidden>Sign out</button>
+          </div>
+        </section>
+
+        <!-- Step 3: caller ID -->
+        <section class="step" id="step-caller">
+          <div class="step-head">
+            <span class="step-num">3</span>
+            <h2 class="step-title">Choose a caller ID</h2>
+          </div>
+          <p class="step-help">
+            The Vobiz number your calls go out from. Carriers require a real
+            number here to bridge a call to a mobile or landline.
+          </p>
+          <div class="form-group">
+            <label class="field-label" for="sel-callerid">Calling from</label>
+            <select id="sel-callerid" class="input"></select>
+          </div>
+        </section>
+
+        <!-- Step 4: dial -->
+        <section class="step" id="step-call">
+          <div class="step-head">
+            <span class="step-num">4</span>
+            <h2 class="step-title">Place a call</h2>
+          </div>
+          <p class="step-help">
+            Type a number, or click a phone number on a lead in Close once
+            "Call from Close" below is set up.
+          </p>
+
+          <form id="form-dial" autocomplete="off">
+            <div class="form-group">
+              <label class="field-label" for="in-dial">Number to call</label>
+              <input type="tel" id="in-dial" class="input input-mono input-dial" placeholder="+91 XXXXX XXXXX" inputmode="tel" />
+            </div>
+
+            <div class="keypad-grid" id="main-keypad">
+              <button type="button" class="keypad-btn" data-key="1">1<span>&nbsp;</span></button>
+              <button type="button" class="keypad-btn" data-key="2">2<span>ABC</span></button>
+              <button type="button" class="keypad-btn" data-key="3">3<span>DEF</span></button>
+              <button type="button" class="keypad-btn" data-key="4">4<span>GHI</span></button>
+              <button type="button" class="keypad-btn" data-key="5">5<span>JKL</span></button>
+              <button type="button" class="keypad-btn" data-key="6">6<span>MNO</span></button>
+              <button type="button" class="keypad-btn" data-key="7">7<span>PQRS</span></button>
+              <button type="button" class="keypad-btn" data-key="8">8<span>TUV</span></button>
+              <button type="button" class="keypad-btn" data-key="9">9<span>WXYZ</span></button>
+              <button type="button" class="keypad-btn" data-key="*">*<span>&nbsp;</span></button>
+              <button type="button" class="keypad-btn" data-key="0">0<span>+</span></button>
+              <button type="button" class="keypad-btn" data-key="#">#<span>&nbsp;</span></button>
+            </div>
+
+            <div class="actions">
+              <button id="btn-call" class="btn btn-primary" type="submit" disabled>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                Call
+              </button>
+              <button id="btn-hangup" class="btn btn-hangup" type="button" hidden>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67"/>
+                  <path d="M5 5l14 14"/>
+                </svg>
+                Hang up
+              </button>
+            </div>
+          </form>
+          <p id="dial-hint" class="hint"></p>
+
+          <div id="call-status" class="call-status" hidden>
+            <span id="call-state">Connecting</span>
+            <span id="call-timer">00:00</span>
+          </div>
+
+          <div id="call-controls" class="call-controls" hidden>
+            <button id="btn-mute" class="call-control-btn" type="button" aria-pressed="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              <span>Mute</span>
+            </button>
+            <button id="btn-hold" class="call-control-btn" type="button" aria-pressed="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              <span>Hold</span>
+            </button>
+            <button id="btn-transfer" class="call-control-btn" type="button" aria-expanded="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+              <span>Transfer</span>
+            </button>
+          </div>
+          <p id="controls-hint" class="hint" hidden>The keypad sends tones during a call.</p>
+
+          <div id="transfer-box" class="transfer-row" hidden>
+            <select id="sel-transfer" class="input" aria-label="Agent to transfer to"></select>
+            <button id="btn-transfer-go" class="btn btn-primary btn-compact" type="button">Transfer</button>
+          </div>
+
+          <!-- Close contact card (ClickUp task card pattern). -->
+          <div id="customer-card" class="contact-box" hidden>
+            <div class="contact-box-head">
+              <span class="contact-box-title">Close contact</span>
+            </div>
+            <div class="contact-name" id="cust-name">Searching Close…</div>
+            <div class="contact-meta" id="cust-number"></div>
+            <div class="contact-meta" id="cust-note"></div>
+            <ul id="cust-convs" class="conv-list"></ul>
+            <a id="cust-link" class="contact-link" target="_blank" rel="noopener" hidden>Open the lead in Close &rarr;</a>
+          </div>
+        </section>
+
+        <!-- Optional: inbound -->
+        <section class="step step-optional" id="step-inbound">
+          <div class="step-head">
+            <span class="step-num step-num-optional">+</span>
+            <h2 class="step-title">Receive calls here</h2>
+          </div>
+          <p class="step-help">
+            One-time setup. Points your selected Vobiz number at this softphone
+            so inbound calls ring in the browser. This moves the number off any
+            other Vobiz application it is attached to.
+          </p>
+          <p id="inbound-hint" class="hint"></p>
+          <button id="btn-inbound" class="btn btn-secondary" type="button">Enable inbound calls</button>
+        </section>
+
+        <!-- Optional: click-to-call from Close -->
+        <section class="step step-optional" id="step-tel">
+          <div class="step-head">
+            <span class="step-num step-num-optional">+</span>
+            <h2 class="step-title">Call from Close</h2>
+          </div>
+          <p class="step-help">
+            In Close, click a phone number and choose
+            <strong>Call using tel: links</strong> (Use another calling app).
+            Then make this softphone your browser's handler for
+            <code>tel:</code> links, and clicking a number in Close brings it
+            here, ready to call.
+          </p>
+          <p id="tel-hint" class="hint"></p>
+          <button id="btn-tel" class="btn btn-secondary" type="button">Use this softphone for phone links</button>
+        </section>
+      <div id="call-history">
+        <div class="section-title">
+          <span>Recent calls</span>
+          <button id="btn-refresh-history" class="icon-btn" type="button" title="Refresh" aria-label="Refresh the list">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>
+            </svg>
+          </button>
+        </div>
+        <ul id="activity" class="history-list"><li class="history-empty">No calls yet.</li></ul>
+      </div>
+
+      <details class="faq">
+        <summary>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+          </svg>
+          Frequently asked
+        </summary>
+        <div class="faq-item">
+          <h3>Why does the softphone run in its own tab?</h3>
+          <p>Close has no panel where another calling service can hold a live call, so the phone lives in this tab. Pin it and keep it open during your shift.</p>
+        </div>
+        <div class="faq-item">
+          <h3>How does a call connect?</h3>
+          <p>Your browser places the call: it connects to Vobiz first, and Vobiz then dials the customer from your chosen caller ID. You hear the customer's phone ringing, and the call is bridged as soon as they answer.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Why is the Call button disabled?</h3>
+          <p>Calling needs a Close connection, a Vobiz sign-in and a live SIP registration. The hint under the button says which one is missing.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Where are calls logged?</h3>
+          <p>Every call, answered or not, becomes a Call activity on the caller's lead in Close, with its direction, status and talk time. An unknown number becomes a new lead. A missed inbound call also gets a "Call back" task. The recording link is added to the call when it is ready.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Why does clicking a number in Close ask before it dials?</h3>
+          <p>Any website can open a <code>tel:</code> link, so the softphone always shows the number and waits for you to click Call.</p>
+        </div>
+      </details>
+
+      <!-- ═══ Settings ═══════════════════════════════════════════════════════ -->
+      <div class="panel" id="view-settings" hidden>
+        <section class="step">
+          <div class="step-head step-head-split">
+            <h2 class="step-title">Settings</h2>
+            <button id="btn-settings-close" class="link-btn" type="button">&larr; Back to the phone</button>
+          </div>
+          <p id="settings-who" class="step-help"></p>
+          <form id="form-settings">
+            <div class="form-group">
+              <label class="field-label" for="set-country">Default country</label>
+              <select id="set-country" class="input">
+                <option value="IN">India (+91)</option><option value="US">United States (+1)</option><option value="CA">Canada (+1)</option>
+                <option value="GB">United Kingdom (+44)</option><option value="AE">United Arab Emirates (+971)</option><option value="SG">Singapore (+65)</option>
+                <option value="AU">Australia (+61)</option><option value="DE">Germany (+49)</option><option value="FR">France (+33)</option>
+              </select>
+              <p class="hint">For numbers typed or stored without a country code.</p>
+            </div>
+            <label class="check-row" for="set-create">
+              <input type="checkbox" id="set-create" />
+              <span class="check-text">Create a lead for unknown numbers<span class="check-note">So every call lands on a timeline. Off: calls from unknown numbers are not logged, because Close keeps calls on leads.</span></span>
+            </label>
+            <label class="check-row" for="set-missed">
+              <input type="checkbox" id="set-missed" />
+              <span class="check-text">Create a "Call back" task for missed calls<span class="check-note">On the caller's lead, due today.</span></span>
+            </label>
+            <label class="check-row" for="set-autoopen">
+              <input type="checkbox" id="set-autoopen" />
+              <span class="check-text">Open the caller's lead in Close on answer<span class="check-note">In a new tab, when the number matches a contact.</span></span>
+            </label>
+            <div class="form-group">
+              <label class="field-label" for="set-ttl">Recording link lifetime</label>
+              <select id="set-ttl" class="input">
+                <option value="900">15 minutes</option><option value="3600">1 hour</option><option value="86400">1 day</option><option value="604800">7 days</option>
+              </select>
+              <p class="hint">Close plays the recording from this link, so it stops playing in Close when the link expires.</p>
+            </div>
+            <button id="btn-save-settings" class="btn btn-primary" type="submit">Save settings</button>
+            <p id="settings-note" class="hint"></p>
+          </form>
+        </section>
+
+        <section class="step">
+          <div class="stack">
+            <button id="btn-disconnect-me" class="btn btn-secondary" type="button">Disconnect my Close user</button>
+            <button id="btn-disconnect-company" class="btn btn-danger" type="button" hidden>Disconnect this Close organization</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <audio id="remote-audio" autoplay></audio>
+    <script src="/static/lib/jssip.min.js"></script>
+    <script src="/static/phone.js"></script>
+  </body>
+</html>

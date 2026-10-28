@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Syntax and JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run lint
+
+  test:
+    name: Backend behaviour and security regressions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci --prefix backend
+      - run: npm test
+
+  secrets:
+    name: No credentials in the tree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run check:secrets
+      - name: Real config is ignored, templates are tracked
+        run: |
+          set -e
+          fail=0
+          for f in backend/.env backend/data/store.json; do
+            if ! git check-ignore -q "$f"; then echo "::error::$f is NOT gitignored"; fail=1; fi
+          done
+          if git check-ignore -q backend/.env.example; then echo "::error::backend/.env.example is gitignored"; fail=1; fi
+          exit $fail

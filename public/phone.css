@@ -1,0 +1,1349 @@
+/* ===========================================================================
+   Vobiz Calling for Help Scout
+
+   The same design as the Zendesk and ClickUp calling panels, which follow
+   vobiz-console/docs/VOBIZ_UI_UX_GUIDELINES.md and the Vobiz RTC Playground:
+   Satoshi; orange-500 #ea580c for primary actions; #0a0a0a dark ground with
+   zinc neutrals; 10px bold uppercase letterspaced micro-labels; one large
+   orange call to action per step.
+
+   From the ClickUp panel: the dial keypad, the Mute / Hold / Transfer row,
+   the matched-record card (here, the Help Scout customer) and the "call
+   finished" popup, drawn with the Zendesk tokens.
+
+   The softphone is a stand-alone tab, so the panel is centred and framed on a
+   wide window, and fills the width on a narrow one.
+   =========================================================================== */
+
+:root {
+  /* Brand */
+  --orange-500: #ea580c;
+  --orange-600: #c2410c;
+  --orange-soft: rgb(234 88 12 / 0.1);
+  --orange-line: rgb(234 88 12 / 0.28);
+
+  /* Light surfaces */
+  --bg: #ffffff;
+  --page: #f4f4f5;
+  --card: #ffffff;
+  --sunken: #fafafa;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+
+  /* Text */
+  --text: #18181b;
+  --text-2: #52525b;
+  --text-3: #a1a1aa;
+
+  /* Semantic */
+  --ok: #15803d;
+  --ok-soft: rgb(21 128 61 / 0.1);
+  --err: #dc2626;
+  --err-soft: rgb(220 38 38 / 0.1);
+  --busy: #1d4ed8;
+  --busy-soft: rgb(29 78 216 / 0.1);
+
+  --r: 10px;
+  --r-lg: 14px;
+  --ring: 0 0 0 3px rgb(234 88 12 / 0.22);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
+
+  color-scheme: light;
+}
+
+/* Dark: the playground's ground, with the guidelines' blue-grey elevation. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0a0a;
+    --page: #050505;
+    --card: #141518;
+    --sunken: #0f1011;
+    --border: #27272a;
+    --border-strong: #3f3f46;
+    --text: #fafafa;
+    --text-2: #a1a1aa;
+    --text-3: #71717a;
+    --orange-soft: rgb(234 88 12 / 0.14);
+    --orange-line: rgb(234 88 12 / 0.35);
+    --ok: #4ade80;
+    --ok-soft: rgb(74 222 128 / 0.12);
+    --err: #f87171;
+    --err-soft: rgb(248 113 113 / 0.12);
+    --busy: #93c5fd;
+    --busy-soft: rgb(147 197 253 / 0.12);
+    --shadow: 0 0 0 1px rgb(255 255 255 / 0.02), 0 12px 32px rgb(0 0 0 / 0.5);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --page: #050505;
+  --card: #141518;
+  --sunken: #0f1011;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --text: #fafafa;
+  --text-2: #a1a1aa;
+  --text-3: #71717a;
+  --orange-soft: rgb(234 88 12 / 0.14);
+  --orange-line: rgb(234 88 12 / 0.35);
+  --ok: #4ade80;
+  --ok-soft: rgb(74 222 128 / 0.12);
+  --err: #f87171;
+  --err-soft: rgb(248 113 113 / 0.12);
+  --busy: #93c5fd;
+  --busy-soft: rgb(147 197 253 / 0.12);
+  --shadow: 0 0 0 1px rgb(255 255 255 / 0.02), 0 12px 32px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.main {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding-bottom: 12px;
+  background: var(--bg);
+}
+
+/* A whole browser tab: frame the panel so it reads as one surface. */
+@media (min-width: 520px) {
+  body {
+    background: var(--page);
+  }
+  .main {
+    margin: 24px auto;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+}
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.92em;
+}
+
+/* ---------- header ------------------------------------------------------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.brand-mark {
+  flex: none;
+  display: block;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+/* The wordmark is lowercase and tight, as on vobiz.ai. */
+.brand-name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  color: var(--text);
+}
+
+/* Playground pattern: 10px bold uppercase, widely letterspaced. */
+.brand-product {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.header-actions .status-badge {
+  margin-right: 4px;
+}
+
+/* ---------- status ------------------------------------------------------- */
+
+/* A badge holds a STATE, never a sentence. */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.status-badge.is-ok      { background: var(--ok-soft);     color: var(--ok); }
+.status-badge.is-error   { background: var(--err-soft);    color: var(--err); }
+.status-badge.is-busy    { background: var(--busy-soft);   color: var(--busy); }
+.status-badge.is-pending { background: var(--orange-soft); color: var(--orange-500); }
+.status-badge.is-off     { background: var(--sunken);      color: var(--text-3); }
+
+.status-badge.is-pending::before {
+  animation: vbz-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes vbz-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
+
+/* The sentence gets its own row, where it can wrap and be read. */
+.status-message {
+  margin: 0 14px 12px;
+  padding: 8px 10px;
+  border-radius: var(--r);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.status-message.is-ok      { background: var(--ok-soft);     color: var(--ok); }
+.status-message.is-error   { background: var(--err-soft);    color: var(--err); }
+.status-message.is-busy    { background: var(--busy-soft);   color: var(--busy); }
+.status-message.is-pending { background: var(--orange-soft); color: var(--orange-500); }
+
+/* ---------- incoming call ------------------------------------------------- */
+
+.incoming {
+  margin: 0 14px 14px;
+  padding: 16px;
+  background: var(--ok-soft);
+  border: 1px solid var(--ok);
+  border-radius: var(--r-lg);
+  text-align: center;
+  animation: incoming-pulse 2s ease-in-out infinite;
+}
+
+.incoming-label {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ok);
+}
+
+.incoming-from {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.incoming-number {
+  margin: 2px 0 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.incoming-number:empty {
+  margin-bottom: 12px;
+}
+
+.incoming .conv-list {
+  margin: -4px 0 12px;
+  text-align: left;
+}
+
+.incoming-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.incoming-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.incoming-hint {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+@keyframes incoming-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(21 128 61 / 0.30); }
+  50%      { box-shadow: 0 0 0 7px rgb(21 128 61 / 0); }
+}
+
+/* ---------- click-to-call confirm ------------------------------------------ */
+
+.confirm-banner {
+  margin: 0 14px 14px;
+  padding: 12px;
+  background: var(--busy-soft);
+  border: 1px solid var(--busy);
+  border-radius: var(--r-lg);
+}
+
+.confirm-label {
+  margin: 0 0 2px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--busy);
+}
+
+.confirm-text {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.confirm-banner select {
+  margin: 0 0 10px;
+}
+
+/* ---------- steps -------------------------------------------------------- */
+
+.panel {
+  padding: 0 14px;
+}
+
+.step {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.step:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Until the step before it is done, a step is shown but not usable. */
+.step.is-locked {
+  opacity: 0.45;
+}
+
+.step.is-locked * {
+  pointer-events: none;
+}
+
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.step-head-split {
+  justify-content: space-between;
+}
+
+.step-head-gap {
+  margin-top: 18px;
+}
+
+.step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--orange-500);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A finished step shows a tick in its number. */
+.step.is-done .step-num {
+  background: var(--ok);
+  font-size: 0;
+}
+
+.step.is-done .step-num::after {
+  content: "";
+  width: 8px;
+  height: 4px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 0 2px 2px;
+  transform: rotate(-45deg);
+}
+
+.step-num-optional {
+  background: none;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-3);
+}
+
+.step-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
+.step-help {
+  margin: 0 0 12px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.step-help a {
+  color: var(--orange-500);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.step-help a:hover {
+  text-decoration: underline;
+}
+
+.step-help strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---------- forms -------------------------------------------------------- */
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+/* Playground micro-label. */
+.field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.input,
+input[type="text"],
+input[type="tel"],
+input[type="password"],
+select {
+  width: 100%;
+  height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r);
+  background: var(--sunken);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input::placeholder {
+  color: var(--text-3);
+}
+
+.input:focus,
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--orange-500);
+  box-shadow: var(--ring);
+}
+
+.input[readonly] {
+  color: var(--text-2);
+}
+
+/* Figures are monospaced and tabular so they never reflow. */
+.input-mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.input-dial {
+  height: 46px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+select {
+  appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+}
+
+select:disabled,
+input:disabled {
+  opacity: 0.6;
+}
+
+.copy-row {
+  display: flex;
+  gap: 6px;
+}
+
+.copy-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- sign-in tabs ----------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--sunken);
+}
+
+.tab {
+  flex: 1;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.is-active {
+  background: var(--card);
+  color: var(--orange-500);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* ---------- checkbox rows ------------------------------------------------------ */
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 12px;
+  cursor: pointer;
+}
+
+.check-row input[type="checkbox"] {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin: 2px 0 0;
+  accent-color: var(--orange-500);
+  cursor: pointer;
+}
+
+.check-text {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+
+.check-note {
+  display: block;
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+.hint:empty {
+  display: none;
+}
+
+/* "Logged in as … — calling from …" with Sign out beside it (ClickUp). */
+.signed-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.signed-row .hint {
+  margin-top: 8px;
+}
+
+.link-btn {
+  flex: none;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--orange-500);
+}
+
+.step-head .link-btn {
+  margin-top: 0;
+}
+
+/* ---------- buttons ------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.btn-primary {
+  background: var(--orange-500);
+  color: #fff;
+}
+
+.btn-primary:hover:not([disabled]) {
+  background: var(--orange-600);
+}
+
+.btn-secondary {
+  background: var(--card);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-secondary:hover:not([disabled]) {
+  border-color: var(--orange-500);
+  color: var(--orange-500);
+}
+
+.btn-danger {
+  background: var(--card);
+  border-color: var(--err);
+  color: var(--err);
+}
+
+.btn-danger:hover:not([disabled]) {
+  background: var(--err-soft);
+}
+
+.btn-hangup {
+  background: var(--err);
+  color: #fff;
+}
+
+.btn-accept {
+  background: var(--ok);
+  color: #fff;
+}
+
+.btn-accept:hover:not([disabled]) {
+  background: #166534;
+}
+
+.btn-compact {
+  width: auto;
+  height: 38px;
+  flex: none;
+  font-size: 12px;
+}
+
+.btn[disabled],
+button[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: var(--orange-soft);
+  color: var(--orange-500);
+}
+
+.icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* ---------- keypad (ClickUp) ---------------------------------------------------- */
+
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 2px 0 10px;
+}
+
+.keypad-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--sunken);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 0.1s ease, border-color 0.1s ease, transform 0.05s ease;
+}
+
+.keypad-btn span {
+  margin-top: 1px;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+
+.keypad-btn:hover {
+  border-color: var(--border-strong);
+  background: var(--card);
+}
+
+.keypad-btn:active {
+  transform: scale(0.96);
+  border-color: var(--orange-500);
+  background: var(--orange-soft);
+}
+
+.keypad-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* ---------- live call ------------------------------------------------------ */
+
+.call-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 9px 11px;
+  border: 1px solid var(--orange-line);
+  border-radius: var(--r);
+  background: var(--orange-soft);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--orange-500);
+}
+
+#call-state {
+  overflow-wrap: anywhere;
+}
+
+#call-timer {
+  flex: none;
+}
+
+/* Mute / Hold / Transfer row (ClickUp). */
+.call-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.call-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r);
+  background: var(--card);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.call-control-btn:hover {
+  border-color: var(--orange-500);
+  color: var(--orange-500);
+}
+
+.call-control-btn[aria-pressed="true"],
+.call-control-btn[aria-expanded="true"] {
+  background: var(--orange-soft);
+  border-color: var(--orange-line);
+  color: var(--orange-500);
+}
+
+.call-control-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.transfer-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.transfer-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Help Scout customer card (ClickUp task card) ------------------- */
+
+.contact-box {
+  margin-top: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--sunken);
+}
+
+.contact-box-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.contact-box-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.contact-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.contact-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.contact-meta:empty {
+  display: none;
+}
+
+#cust-number {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.contact-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--orange-500);
+  text-decoration: none;
+}
+
+.contact-link:hover {
+  text-decoration: underline;
+}
+
+/* Recent conversations, in the customer card and the incoming banner. */
+.conv-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.conv-list:empty {
+  display: none;
+}
+
+.conv-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+}
+
+.conv-list li:first-child {
+  border-top: none;
+}
+
+.conv-list a {
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-list a:hover {
+  color: var(--orange-500);
+}
+
+.conv-status {
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* ---------- calls this session ---------------------------------------------- */
+
+#call-history {
+  margin: 0 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.history-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+
+.history-list li:last-child {
+  border-bottom: none;
+}
+
+.history-list li.history-empty {
+  color: var(--text-3);
+}
+
+.history-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.history-who {
+  font-weight: 600;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.history-meta {
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.history-list li.is-warn .history-who {
+  color: var(--orange-500);
+  font-weight: 500;
+}
+
+.history-open {
+  flex: none;
+  padding: 3px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: var(--card);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.history-open:hover {
+  border-color: var(--orange-500);
+  color: var(--orange-500);
+}
+
+.history-tag {
+  flex: none;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+audio#remote-audio {
+  display: none;
+}
+
+/* ---------- FAQ -------------------------------------------------------------- */
+
+.faq {
+  margin: 0 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.faq > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  transition: color 0.15s ease;
+}
+
+.faq > summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq > summary:hover {
+  color: var(--orange-500);
+}
+
+.faq > summary svg {
+  color: var(--orange-500);
+  flex: none;
+}
+
+.faq-item {
+  margin-top: 12px;
+}
+
+.faq-item h3 {
+  margin: 0 0 3px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.faq-item p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+/* ---------- call finished popup (ClickUp) ------------------------------------ */
+
+.call-done-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.call-done-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 22px 18px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: 0 20px 40px rgb(0 0 0 / 0.35);
+  text-align: center;
+  animation: modal-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.call-done-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.call-done-badge {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--ok-soft);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ok);
+}
+
+.call-done-title {
+  margin: 0 0 2px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.call-done-caller {
+  margin: 0 0 14px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.call-done-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--sunken);
+}
+
+.call-done-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.call-done-stat-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.call-done-stat-val {
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.call-done-crm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  color: var(--ok);
+}
+
+.call-done-crm[data-state="pending"] {
+  color: var(--text-3);
+}
+
+.call-done-crm[data-state="pending"] svg {
+  display: none;
+}
+
+.call-done-crm[data-state="error"] {
+  color: var(--orange-500);
+}
+
+.call-done-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--orange-500);
+  text-decoration: none;
+}
+
+.call-done-link:hover {
+  text-decoration: underline;
+}
+
+.call-done-card .btn {
+  margin-top: 8px;
+}
+
+/* ---------- misc --------------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

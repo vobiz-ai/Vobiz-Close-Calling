@@ -1,0 +1,19 @@
+{
+  "name": "vobiz-close-calling",
+  "version": "1.0.0",
+  "description": "Vobiz calling for Close CRM: browser softphone, caller lookup, click-to-call from Close, and automatic call logging as Close Call activities",
+  "private": true,
+  "license": "MIT",
+  "author": "Vobiz",
+  "homepage": "https://vobiz.ai",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "npm --prefix backend test",
+    "lint": "node scripts/lint.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "tunnel": "cloudflared tunnel --url http://localhost:8098"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

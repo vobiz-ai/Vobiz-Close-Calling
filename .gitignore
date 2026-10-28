@@ -1,0 +1,36 @@
+# Secrets and local configuration: never commit these
+.env
+.env.*
+.env*.local
+*.env
+backend/.env
+backend/.env.*
+!.env.example
+!**/.env.example
+!backend/.env.example
+
+
+
+# Runtime state (endpoint ids, organizations, encrypted Close credentials)
+backend/data/
+data/
+
+# Local-only notes and test accounts
+*.local.md
+
+# Logs and build output
+*.log
+tmp/
+dist/
+*.zip
+
+# Dependencies
+node_modules/
+
+# Editor / OS / Tooling
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
+*.bak
